@@ -13,8 +13,6 @@ import styles from './app.module.scss';
 export const App = (): React.JSX.Element => {
   //Стейт для стилей текущей статьи
   const [articleState, setArticleState] = useState(defaultArticleState);
-  //Стейт для открытия/закрытия сайдбара
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <main
@@ -30,9 +28,6 @@ export const App = (): React.JSX.Element => {
       }
     >
       <ArticleParamsForm
-        isOpen={isMenuOpen}
-        onToggle={() => setIsMenuOpen(!isMenuOpen)}
-        onClose={() => setIsMenuOpen(false)}
         currentSettings={articleState}
         onApply={setArticleState}
       />

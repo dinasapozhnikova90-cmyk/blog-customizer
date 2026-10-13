@@ -1,12 +1,12 @@
 import { clsx } from 'clsx';
-import { useState, useEffect, useRef, type SyntheticEvent } from 'react';
+import { useState, useRef, type SyntheticEvent } from 'react';
 import { ArrowButton } from 'src/ui/arrow-button';
 import { Button } from 'src/ui/button';
 import { Text } from 'src/ui/text';
 import { Select } from 'src/ui/select';
 import { RadioGroup } from 'src/ui/radio-group';
 import { Separator } from 'src/ui/separator';
-import type { ArticleStateType } from 'src/constants/articleProps';
+import type { ArticleStateType, OptionType } from 'src/constants/articleProps';
 import { 
   fontFamilyOptions, 
   fontSizeOptions, 
@@ -15,50 +15,29 @@ import {
   contentWidthArr 
 } from 'src/constants/articleProps';
 import { defaultArticleState } from 'src/constants/articleProps';
-
+import { useSidebarClose } from 'src/components/article-params-form/useSidebarClose';
 import styles from './ArticleParamsForm.module.scss';
 
 export type ArticleParamsFormProps = {
-  isOpen: boolean;
-  onToggle: () => void;
-  onClose: () => void;
   currentSettings: ArticleStateType;
   onApply: (state: ArticleStateType) => void;
 };
 
 export const ArticleParamsForm = ({
-  isOpen,
-  onToggle,
-  onClose,
   currentSettings,
   onApply,
 }: ArticleParamsFormProps): React.JSX.Element => {
-
+    //Стейт для открытия/закрытия сайдбара
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [formState, setFormState] = useState(currentSettings);
   const rootRef = useRef<HTMLElement>(null);
+  const [radioGroupKey, setRadioGroupKey] = useState(0);
 
-  useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
-      // Если сайдбар открыт и клик был вне элемента сайдбара
-      if (
-        isOpen && 
-        rootRef.current && 
-        !rootRef.current.contains(event.target as Node)
-      ) {
-        onClose();
-      }
-    };
-
-    // Вешаем слушатель только когда сайдбар открыт (оптимизация)
-    if (isOpen) {
-      document.addEventListener('mousedown', handleOutsideClick);
-    }
-
-    // Очищаем слушатель при размонтировании или закрытии
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, [isOpen, onClose]);
+  useSidebarClose({
+    rootRef,
+    isOpen: isMenuOpen,
+    onClose: () => setIsMenuOpen(false),
+  });
   
   const handleSubmit = (evt: SyntheticEvent) => {
     evt.preventDefault();
@@ -69,20 +48,28 @@ export const ArticleParamsForm = ({
     evt.preventDefault();
     setFormState(defaultArticleState);
     onApply(defaultArticleState);
+    setRadioGroupKey((prevKey) => prevKey + 1)
+  };
+
+  const handleChange = (key: keyof ArticleStateType) => (option: OptionType): void => {
+    setFormState((prev) => ({ ...prev, [key]: option }));
   };
 
   return (
     <>
-      <ArrowButton isOpen={isOpen} onClick={onToggle} />
+      <ArrowButton 
+        isOpen={isMenuOpen} 
+        onClick={() => setIsMenuOpen((prev) => !prev)}
+      />
 
       <aside
         ref={rootRef}
         className={clsx(styles.container, {
-          [styles.container_open]: isOpen,
+          [styles.container_open]: isMenuOpen,
         })}
       >
         <form className={styles.form}onSubmit={handleSubmit} onReset={handleReset}>
-          <Text weight={800} size={45} uppercase>
+          <Text weight={800} size={31} uppercase as="h2">
             Задайте параметры
           </Text>
           
@@ -90,28 +77,23 @@ export const ArticleParamsForm = ({
             title="шрифт"
             selected={formState.fontFamilyOption}
             options={fontFamilyOptions}
-            onChange={(option) => {
-              setFormState((prev) => ({ ...prev, fontFamilyOption: option }));
-            }}
+            onChange={handleChange('fontFamilyOption')}
           />
 
           <RadioGroup
+            key = {radioGroupKey}
             title="размер шрифта"
             name="fontSize"
             options={fontSizeOptions}
             selected={formState.fontSizeOption}
-            onChange={(option) => {
-              setFormState((prev) => ({ ...prev, fontSizeOption: option }));
-            }}
+            onChange={handleChange('fontSizeOption')}
           />
 
           <Select
             title="цвет шрифта"
             selected={formState.fontColor}
             options={fontColors}
-            onChange={(option) => {
-              setFormState((prev) => ({ ...prev, fontColor: option }));
-            }}
+            onChange={handleChange('fontColor')}
           />
 
           <Separator />
@@ -120,18 +102,14 @@ export const ArticleParamsForm = ({
             title="цвет фона"
             selected={formState.backgroundColor}
             options={backgroundColors}
-            onChange={(option) => {
-              setFormState((prev) => ({ ...prev, backgroundColor: option }));
-            }}
+            onChange={handleChange('backgroundColor')}
           />
 
           <Select
             title="ширина контента"
             selected={formState.contentWidth}
             options={contentWidthArr}
-            onChange={(option) => {
-              setFormState((prev) => ({ ...prev, contentWidth: option }));
-            }}
+            onChange={handleChange('contentWidth')}
           />
 
           <div className={styles.bottomContainer}>

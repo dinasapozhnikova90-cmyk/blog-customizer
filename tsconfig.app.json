@@ -19,9 +19,10 @@
     "resolveJsonModule": true,
 
     /* Paths */
-    "baseUrl": ".",
+    "ignoreDeprecations": "5.0",
+    "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"],
+      "@/*": ["./src/*"],
       "@components/*": ["src/components/*"],
       "@contexts/*": ["src/contexts/*"],
       "@hocs/*": ["src/hocs/*"],
